@@ -4,18 +4,7 @@
 #include <cmath>
 #include <ctime>
 #include <iomanip>
-
-void GenerateDataset(const char* filename, int num) {
-    std::ofstream file(filename);
-    srand(static_cast<unsigned int>(time(nullptr)));
-
-    for (int i = 0; i < num; ++i) {
-        double number = (rand() % 1000) + (rand() % 10) / 10.0; // Вещественные числа с 3 цифрами и 1 дробной
-        file << std::fixed << std::setprecision(1) << number << "\n";
-    }
-
-    file.close();
-}
+#include "lab2-3.h"
 
 void Merge(float* left, int leftCount, float* right, int rightCount, float* result, int& comparisonCount) {
     int i = 0, j = 0, k = 0;
@@ -48,6 +37,48 @@ void MergeSort(float* arr, int num, int& comparisonCount) {
     delete[] right;
 }
 
+void Sort(std::string filename, int num, int& comparisonCount)
+{
+    float* arr = new float[num];
+    std::ifstream dataset(filename);
+    for (int i = 0; i < num; i++) dataset >> arr[i];
+    dataset.close();
+    MergeSort(arr, num, comparisonCount);
+    // Найти позицию точки в строке
+    size_t pos = filename.rfind('.');
+    if (pos != std::string::npos) {
+        // Вставить ".sort" перед расширением файла
+        filename.insert(pos, ".sort");
+    }
+    else {
+        // Если в имени файла нет расширения, просто добавить ".sort" в конец
+        filename += ".sort";
+    }
+
+    std::ofstream file(filename);
+    for (int i = 0; i < num; ++i) {
+        file << arr[i] << "\n";
+    }
+    file.close();
+    delete[] arr;
+}
+
+
+
+void GenerateDataset(const char* filename, int num) {
+    std::ofstream file(filename);
+    srand(static_cast<unsigned int>(time(nullptr)));
+
+    for (int i = 0; i < num; ++i) {
+        double number = (rand() % 1000) + (rand() % 10) / 10.0; // Вещественные числа с 3 цифрами и 1 дробной
+        file << std::fixed << std::setprecision(1) << number << "\n";
+    }
+
+    file.close();
+}
+
+
+
 void EvaluateSort() {
     const int nums[] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
     std::ofstream file("evaluation.txt");
@@ -57,15 +88,9 @@ void EvaluateSort() {
         << std::setw(15) << "Т2" << std::setw(15) << "ТЭ/Т1" << std::setw(15) << "ТЭ/Т2" << "\n";
 
     for (int num : nums) {
-        GenerateDataset("dataset.txt", num);
-        float* arr = new float[num];
-        std::ifstream dataset("dataset.txt");
-        for (int i = 0; i < num; i++) dataset >> arr[i];
-        dataset.close();
-
         int comparisonCount = 0;
-        MergeSort(arr, num, comparisonCount);
-
+        GenerateDataset("dataset.txt", num);
+        Sort("dataset.txt", num, comparisonCount);
         double T1 = static_cast<double>(num) *   static_cast<double>(num);
         double T2 = static_cast<double>(num) * log2(static_cast<double>(num));
 
@@ -77,11 +102,13 @@ void EvaluateSort() {
             << std::setw(15) << comparisonCount / T1
             << std::setw(15) << comparisonCount / T2 << "\n";
 
-        delete[] arr;
+        
     }
 
     file.close();
 }
+
+
 
 int main() {
     EvaluateSort();
